@@ -4,7 +4,10 @@ from pydantic import BaseModel
 from pydantic import Field
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
 from api.v1.models import Quote
+from database import SessionDeps
+from sqlmodel import select
 
 apiv1 = APIRouter(prefix="/api/v1")
 
@@ -46,5 +49,22 @@ def get_all_names(paging: PagingDeps) -> list:
     return names[paging.offset:paging.offset+paging.limit]
 
 @apiv1.post("/quote")
-def insert_quote(quote: Quote) -> Quote:
+def insert_quote(quote: Quote, session: SessionDeps) -> Quote:
+    session.add(quote)
+    session.commit()
+    session.refresh(quote)
     return quote
+
+@apiv1.get("/quote/all")
+def get_all_quotes(paging: PagingDeps, session: SessionDeps):
+    statement = select(Quote).limit(paging.limit).offset(paging.offset)
+    result = session.exec(statement=statement)
+    return result.all()
+
+@apiv1.get("/quote/{index}")
+def get_quote(index: int, session: SessionDeps) -> Quote:
+    quote = session.get(Quote, index)
+    if not quote:
+        raise HTTPException(status_code=404, detail=f"No quote with id {index}")
+    return quote
+
