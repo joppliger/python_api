@@ -1,2 +1,5 @@
 fastapi[standard]
 dotenv
+sqlmodel
+psycopg2-binary
+psycopg2

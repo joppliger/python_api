@@ -1,0 +1,22 @@
+services:
+  app:
+    build: .
+    ports:
+      - 8080:80
+    volumes:
+      - ./app:/code/app
+    command: 
+      - fastapi 
+      - dev 
+      - app/main.py 
+      - --port 
+      - "80" 
+      - --host 
+      - "0.0.0.0"
+    env_file: .env
+  db:
+    image: postgres:17.4
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: password
